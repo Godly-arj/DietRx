@@ -28,7 +28,7 @@ class DatabaseHelper {
       try {
         await Directory(dirname(path)).create(recursive: true);
         ByteData data = await rootBundle.load(
-          url.join("assets", "database", "products.db"),
+          join("assets", "database", "products.db"),
         );
         List<int> bytes = data.buffer.asUint8List(
           data.offsetInBytes,
@@ -43,7 +43,7 @@ class DatabaseHelper {
       print("Database already exists at: $path");
     }
 
-    return await openDatabase(path, readOnly: true);
+    return await openDatabase(path, readOnly: false);
   }
 
   Future<Map<String, dynamic>?> getProduct(String barcode) async {
@@ -88,5 +88,41 @@ class DatabaseHelper {
     );
 
     return maps;
+  }
+
+  // --- SCAN HISTORY METHODS ---
+  // 1. Create the history table if it doesn't exist
+  Future<void> _ensureHistoryTableExists() async {
+    final db = await database;
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS scan_history (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        barcode TEXT,
+        name TEXT,
+        image_url TEXT,
+        status TEXT,
+        scanned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    ''');
+  }
+
+  // 2. Save a new scan to history
+  Future<void> saveScanHistory(String barcode, String name, String? imageUrl, String status) async {
+    final db = await database;
+    await _ensureHistoryTableExists();
+    
+    await db.insert('scan_history', {
+      'barcode': barcode,
+      'name': name,
+      'image_url': imageUrl,
+      'status': status,
+    });
+  }
+
+  // 3. Fetch all scan history
+  Future<List<Map<String, dynamic>>> getScanHistory() async {
+    final db = await database;
+    await _ensureHistoryTableExists();
+    return await db.query('scan_history', orderBy: 'scanned_at DESC');
   }
 }

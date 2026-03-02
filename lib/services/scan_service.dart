@@ -207,6 +207,10 @@ class ScanService {
       }
     }
 
+    // --- F. SAVE TO SQLITE HISTORY ---
+    String status = isMissingData ? 'unknown' : (warnings.isEmpty ? 'safe' : 'unsafe');
+    await _dbHelper.saveScanHistory(barcode, name, imageUrl, status);
+    
     return ScanResult(
       productName: name,
       // Safe if: No Warnings AND Data isn't completely missing
