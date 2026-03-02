@@ -45,7 +45,12 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     } catch (e) {
       print("Failed to load history: $e");
-      if (mounted) setState(() => _isLoadingHistory = false);
+      if (mounted) {
+        setState(() {
+          _isLoadingHistory = false;
+          _isDbReady = true; 
+        });
+      }
     }
   }
 
@@ -131,11 +136,17 @@ class _HomeScreenState extends State<HomeScreen> {
                           final statusColor = _getStatusColor(item['status']);
                           final statusIcon = _getStatusIcon(item['status']);
 
-                          // Format timestamp safely
                           String scanTime = item['scanned_at']?.toString() ?? "";
-                          if (scanTime.length >= 16) {
-                            scanTime = scanTime.substring(0, 16);
-                          }
+                          try {
+                            if (scanTime.isNotEmpty) {
+                              DateTime parsedDate = DateTime.parse(scanTime);
+                              String day = parsedDate.day.toString().padLeft(2, '0');
+                              String month = parsedDate.month.toString().padLeft(2, '0');
+                              String year = parsedDate.year.toString();
+                              scanTime = "$day - $month - $year";
+                            }
+                          // ignore: empty_catches
+                          } catch (e) {}
 
                           return Card(
                             color: Colors.grey[900],
@@ -145,12 +156,12 @@ class _HomeScreenState extends State<HomeScreen> {
                             child: ListTile(
                               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                               
-                              // Left Side: Image 
+                              // Left Side: Image
                               leading: Container(
                                 width: 55,
                                 height: 55,
                                 decoration: BoxDecoration(
-                                  color: Colors.grey[850],
+                                  color: Colors.grey[850], 
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                                 child: item['image_url'] != null && item['image_url'].toString().isNotEmpty
@@ -159,10 +170,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                         child: Image.network(
                                           item['image_url'],
                                           fit: BoxFit.cover,
-                                          errorBuilder: (context, error, stackTrace) => const SizedBox(),
+                                          errorBuilder: (context, error, stackTrace) => const SizedBox(), 
                                         ),
                                       )
-                                    : const SizedBox(), 
+                                    : const SizedBox(),
                               ),
                               
                               // Middle: Name & Date
@@ -179,7 +190,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               subtitle: Padding(
                                 padding: const EdgeInsets.only(top: 4.0),
                                 child: Text(
-                                  scanTime,
+                                  scanTime, 
                                   style: GoogleFonts.poppins(color: Colors.white54, fontSize: 12),
                                 ),
                               ),

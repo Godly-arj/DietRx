@@ -239,7 +239,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
                 // 3. STATUS WIDGET
                 statusWidget,
 
-                // 4. WARNINGS LIST 
+                // 4. WARNINGS LIST
                 if (!result.isSafe && !result.isMissingData) ...[
                   const Divider(),
                   ...result.warnings.map(
@@ -411,11 +411,6 @@ class _ScannerScreenState extends State<ScannerScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              "t belongs to the same specific category.",
-              style: TextStyle(fontStyle: FontStyle.italic),
-            ),
-            const SizedBox(height: 10),
             const Divider(),
             const SizedBox(height: 10),
             Text(
@@ -480,7 +475,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
   }
 }
 
-// OVERLAY PAINTER 
+// OVERLAY PAINTER
 class ScannerOverlay extends CustomPainter {
   final Rect scanWindow;
   ScannerOverlay(this.scanWindow);
