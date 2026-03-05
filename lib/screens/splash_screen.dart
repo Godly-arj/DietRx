@@ -21,7 +21,7 @@ class _DietRxSplashScreenState extends State<DietRxSplashScreen>
   void initState() {
     super.initState();
 
-    // 1. Setup Logo Animation
+    // 1. Logo Animation
     _logoController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 400),
