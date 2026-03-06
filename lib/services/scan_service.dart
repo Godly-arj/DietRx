@@ -261,9 +261,9 @@ class ScanService {
         bool failed = false;
         rule.nutrientLimits.forEach((key, limit) {
           double? val = nutrients[key];
-          if (val == null)
+          if (val == null) {
             failed = true;
-          else if (val > limit)
+          } else if (val > limit)
             failed = true;
           else
             goodPoints.add("Low ${key.replaceAll('_100g', '')} (${val}g)");

@@ -1,9 +1,9 @@
+import 'package:dietrx/screens/main_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'screens/splash_screen.dart';
-import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/health_profile_screen.dart';
 
@@ -70,7 +70,7 @@ class AuthWrapper extends StatelessWidget {
               // 3. LOGIC DECISION
               if (dbSnapshot.hasData && dbSnapshot.data!.exists) {
                 // Profile Exists -> Go Home
-                return const HomeScreen();
+                return const MainScreen();
               } else {
                 // Profile Missing -> Go Setup Profile
                 return const HealthProfileScreen();

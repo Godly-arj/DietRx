@@ -33,7 +33,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // Fetch history from Database
   Future<void> _loadHistory() async {
     try {
       final data = await DatabaseHelper().getScanHistory();
@@ -160,7 +159,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           String year = parsedDate.year.toString();
                           scanTime = "$day - $month - $year";
                         }
-                        // ignore: empty_catches
                       } catch (e) {}
 
                       return Card(
@@ -175,8 +173,6 @@ class _HomeScreenState extends State<HomeScreen> {
                             horizontal: 16,
                             vertical: 8,
                           ),
-
-                          // Left Side: Image
                           leading: Container(
                             width: 55,
                             height: 55,
@@ -199,8 +195,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                   )
                                 : const SizedBox(),
                           ),
-
-                          // Middle: Name & Date
                           title: Text(
                             item['name'] ?? 'Unknown Product',
                             style: GoogleFonts.poppins(
@@ -221,8 +215,6 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
                           ),
-
-                          // Right Side: Status Icon
                           trailing: Icon(
                             statusIcon,
                             color: statusColor,
@@ -237,46 +229,50 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
 
       // --- FAB ---
-      floatingActionButton: OpenContainer(
-        transitionType: ContainerTransitionType.fade,
-        transitionDuration: const Duration(milliseconds: 500),
-        openBuilder: (context, _) => const ScannerScreen(),
-        onClosed: (_) => _loadHistory(),
-        closedElevation: 6.0,
-        closedShape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        closedColor: _isDbReady ? const Color(0xFF1B4D3E) : Colors.grey[800]!,
-        tappable: _isDbReady,
-        closedBuilder: (context, openContainer) {
-          return Container(
-            height: 56,
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _isDbReady
-                    ? const Icon(Icons.qr_code_scanner, color: Colors.white)
-                    : const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white54,
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 80.0),
+        child: OpenContainer(
+          transitionType: ContainerTransitionType.fade,
+          transitionDuration: const Duration(milliseconds: 500),
+          openBuilder: (context, _) => const ScannerScreen(),
+          onClosed: (_) => _loadHistory(),
+          closedElevation: 6.0,
+          closedShape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          closedColor: _isDbReady ? const Color(0xFF1B4D3E) : Colors.grey[800]!,
+          tappable: _isDbReady,
+          closedBuilder: (context, openContainer) {
+            return Container(
+              height: 56,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _isDbReady
+                      ? const Icon(Icons.qr_code_scanner, color: Colors.white)
+                      : const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white54,
+                          ),
                         ),
-                      ),
-                const SizedBox(width: 12),
-                Text(
-                  _isDbReady ? "Scan Now" : "Readying...",
-                  style: GoogleFonts.poppins(
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
+                  const SizedBox(width: 12),
+                  Text(
+                    _isDbReady ? "Scan Now" : "Readying...",
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
                   ),
-                ),
-              ],
-            ),
-          );
-        },
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }
