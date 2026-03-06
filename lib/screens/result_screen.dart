@@ -4,6 +4,7 @@ import '../models/scan_result.dart';
 import '../widgets/animated_leaf.dart';
 import '../widgets/result_components.dart';
 import '../widgets/animated_warning.dart';
+import 'ingredient_scanner_screen.dart';
 
 class ResultScreen extends StatefulWidget {
   final ScanResult result;
@@ -325,6 +326,54 @@ class _ResultScreenState extends State<ResultScreen>
                               pillTextColor: pillTextColor,
                               descriptionPoints: descriptionPoints,
                             ),
+
+                            // SCAN LABEL BUTTON
+                            if (widget.result.isMissingData) ...[
+                              const SizedBox(height: 20),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 24,
+                                ),
+                                child: SizedBox(
+                                  width: double.infinity,
+                                  height: 55,
+                                  child: ElevatedButton.icon(
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => IngredientScannerScreen(
+                                            // Passing the barcode so we can save it to Firebase later!
+                                            // (Assuming 'barcode' exists in your ScanResult model, otherwise you can pass productName)
+                                            scannedBarcode:
+                                                widget.result.productName,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    icon: const Icon(
+                                      Icons.camera_alt,
+                                      color: Colors.black,
+                                    ),
+                                    label: Text(
+                                      "Scan Ingredient Label Instead",
+                                      style: GoogleFonts.poppins(
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: pillColor,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(15),
+                                      ),
+                                      elevation: 4,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
 
                             if (!widget.result.isSafe ||
                                 widget.result.isMissingData) ...[
