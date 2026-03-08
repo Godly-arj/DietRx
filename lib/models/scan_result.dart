@@ -14,6 +14,7 @@ class ScanResult {
   final double? salt;
   final double? fat;
   final double? calories;
+  final String? barcode; 
 
   final List<Map<String, dynamic>> alternatives;
 
@@ -33,5 +34,6 @@ class ScanResult {
     this.salt,
     this.fat,
     this.calories,
+    this.barcode,
   });
 }

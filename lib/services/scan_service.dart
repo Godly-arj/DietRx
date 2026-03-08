@@ -91,24 +91,34 @@ class ScanService {
 
     for (String condition in allUserConditions) {
       String docId = condition.trim().toLowerCase();
-      
-      bool existsLocally = combinedRules.keys.any((k) => k.toLowerCase() == docId);
-      
+
+      bool existsLocally = combinedRules.keys.any(
+        (k) => k.toLowerCase() == docId,
+      );
+
       if (!existsLocally) {
         try {
-          DocumentSnapshot ruleDoc = await FirebaseFirestore.instance.collection('Dynamic_Rules').doc(docId).get();
-          
+          DocumentSnapshot ruleDoc = await FirebaseFirestore.instance
+              .collection('Dynamic_Rules')
+              .doc(docId)
+              .get();
+
           if (ruleDoc.exists) {
             var data = ruleDoc.data() as Map<String, dynamic>;
-            List<String> keywords = List<String>.from(data['forbiddenKeywords'] ?? []);
+            List<String> keywords = List<String>.from(
+              data['forbiddenKeywords'] ?? [],
+            );
             Map<String, double> limits = {};
-            
+
             if (data['nutrientLimits'] != null) {
-              (data['nutrientLimits'] as Map<String, dynamic>).forEach((key, value) {
+              (data['nutrientLimits'] as Map<String, dynamic>).forEach((
+                key,
+                value,
+              ) {
                 limits[key] = (value as num).toDouble();
               });
             }
-            
+
             combinedRules[condition] = HealthRule(
               forbiddenKeywords: keywords,
               nutrientLimits: limits,
@@ -134,9 +144,7 @@ class ScanService {
           double? val = nutrients[nutrientKey];
 
           if (val != null && val > limit) {
-            warnings.add(
-              "$condition: High $nutrientKey (${val}g > ${limit}g)",
-            );
+            warnings.add("$condition: High $nutrientKey (${val}g > ${limit}g)");
           }
         });
 
@@ -194,7 +202,7 @@ class ScanService {
           item,
           userConditions,
           userAllergies,
-          combinedRules, 
+          combinedRules,
         );
 
         if (safetyReason != null) {
@@ -208,11 +216,14 @@ class ScanService {
     }
 
     // --- F. SAVE TO SQLITE HISTORY ---
-    String status = isMissingData ? 'unknown' : (warnings.isEmpty ? 'safe' : 'unsafe');
+    String status = isMissingData
+        ? 'unknown'
+        : (warnings.isEmpty ? 'safe' : 'unsafe');
     await _dbHelper.saveScanHistory(barcode, name, imageUrl, status);
-    
+
     return ScanResult(
       productName: name,
+      barcode: barcode,
       // Safe if: No Warnings AND Data isn't completely missing
       isSafe: warnings.isEmpty && !isMissingData,
       isMissingData: isMissingData,
@@ -280,13 +291,13 @@ class ScanService {
     for (var allergy in allergies) {
       if (allergenCol.contains(allergy.toLowerCase())) return null;
       if (ingredients.contains(allergy.toLowerCase())) return null;
-      
+
       if (rules.containsKey(allergy)) {
         for (var forbidden in rules[allergy]!.forbiddenKeywords) {
           if (ingredients.contains(forbidden.toLowerCase())) return null;
         }
       }
-      
+
       goodPoints.add("No $allergy");
     }
 

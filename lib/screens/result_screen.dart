@@ -343,10 +343,9 @@ class _ResultScreenState extends State<ResultScreen>
                                         context,
                                         MaterialPageRoute(
                                           builder: (context) => IngredientScannerScreen(
-                                            // Passing the barcode so we can save it to Firebase later!
-                                            // (Assuming 'barcode' exists in your ScanResult model, otherwise you can pass productName)
                                             scannedBarcode:
-                                                widget.result.productName,
+                                                widget.result.barcode ??
+                                                "UNKNOWN_BARCODE",
                                           ),
                                         ),
                                       );
