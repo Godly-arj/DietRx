@@ -75,7 +75,7 @@ class _IngredientScannerScreenState extends State<IngredientScannerScreen> {
                   const CircularProgressIndicator(color: Color(0xFF8CC63F)),
                   const SizedBox(height: 20),
                   Text(
-                    "Gemini is analyzing the label...",
+                    "Analyzing the label...",
                     style: GoogleFonts.poppins(color: Colors.white70),
                   ),
                 ],
