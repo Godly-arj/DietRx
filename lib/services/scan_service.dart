@@ -39,8 +39,7 @@ class ScanService {
         product = {
           'name': data['name'],
           'ingredients': ingredientsStr,
-          'image_url':
-              data['image_url'],
+          'image_url': data['image_url'],
           'nutriscore': data['nutriscore'],
           'nova_group': data['nova_group'],
           'categories': data['category'] ?? data['categories'],
@@ -61,7 +60,7 @@ class ScanService {
       print("Error fetching from Firebase: $e");
     }
 
-    // 🚀 2. CHECKLOCAL SQLITE 
+    // 🚀 2. CHECKLOCAL SQLITE
     product ??= await _dbHelper.getProduct(barcode);
 
     // 3. If neither database has it, return null.
@@ -348,5 +347,132 @@ class ScanService {
     if (goodPoints.isEmpty) return "Safe for general consumption.";
 
     return goodPoints.toSet().join(" • ");
+  }
+
+  // --- Evaluates a Recipe against the User's Profile ---
+  Future<Map<String, dynamic>> evaluateRecipe(
+    Map<String, dynamic> recipeData,
+  ) async {
+    List<dynamic> rawIngredients = recipeData['ingredients'] ?? [];
+    String ingredientsStr = rawIngredients.join(", ").toLowerCase();
+    Map<String, dynamic> rawNutrition = recipeData['nutrition'] ?? {};
+
+    double? parseNutrient(String key) {
+      if (rawNutrition[key] == null) return null;
+      String val = rawNutrition[key].toString();
+      if (val.toLowerCase() == 'not listed') return null;
+      String numStr = val.replaceAll(RegExp(r'[^0-9.]'), '');
+      return double.tryParse(numStr);
+    }
+
+    Map<String, double?> nutrients = {
+      'sugar_100g': parseNutrient('sugar'),
+      'fat_100g': parseNutrient('fat'),
+      'sat_fat_100g': parseNutrient('saturated_fat'),
+      'carbs_100g': parseNutrient('carbohydrates'),
+      'sodium_100g': parseNutrient('sodium'),
+      'calories_100g': parseNutrient('calories'),
+    };
+
+    List<String> warnings = [];
+
+    // 1. Fetch User Profile
+    List<String> userConditions = [];
+    List<String> userAllergies = [];
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        var doc = await FirebaseFirestore.instance
+            .collection('Health_Profiles')
+            .doc(user.uid)
+            .get();
+        if (doc.exists && doc.data() != null) {
+          userConditions = List<String>.from(doc.data()!['conditions'] ?? []);
+          userAllergies = List<String>.from(doc.data()!['allergies'] ?? []);
+        }
+      }
+    } catch (e) {
+      print("Error fetching profile: $e");
+    }
+
+    // 2. Fetch Dynamic Rules
+    Map<String, HealthRule> combinedRules = Map.of(diseaseRules);
+    Set<String> allUserConditions = {...userConditions, ...userAllergies};
+
+    for (String condition in allUserConditions) {
+      String docId = condition.trim().toLowerCase();
+      if (!combinedRules.keys.any((k) => k.toLowerCase() == docId)) {
+        try {
+          DocumentSnapshot ruleDoc = await FirebaseFirestore.instance
+              .collection('Dynamic_Rules')
+              .doc(docId)
+              .get();
+          if (ruleDoc.exists) {
+            var data = ruleDoc.data() as Map<String, dynamic>;
+            List<String> keywords = List<String>.from(
+              data['forbiddenKeywords'] ?? [],
+            );
+            Map<String, double> limits = {};
+            if (data['nutrientLimits'] != null) {
+              (data['nutrientLimits'] as Map<String, dynamic>).forEach((
+                key,
+                value,
+              ) {
+                limits[key] = (value as num).toDouble();
+              });
+            }
+            combinedRules[condition] = HealthRule(
+              forbiddenKeywords: keywords,
+              nutrientLimits: limits,
+            );
+          }
+        } catch (e) {
+          print("Error fetching dynamic rule: $e");
+        }
+      }
+    }
+
+    // 3. Analyze Rules
+    for (var condition in userConditions) {
+      if (combinedRules.containsKey(condition)) {
+        final rule = combinedRules[condition]!;
+        rule.nutrientLimits.forEach((nutrientKey, limit) {
+          double? val = nutrients[nutrientKey];
+          if (val != null && val > limit) {
+            warnings.add(
+              "$condition: High $nutrientKey (Estimated ${val}g > ${limit}g limit)",
+            );
+          }
+        });
+        for (var forbidden in rule.forbiddenKeywords) {
+          if (ingredientsStr.contains(forbidden.toLowerCase())) {
+            warnings.add("$condition: Contains '$forbidden'");
+            break;
+          }
+        }
+      }
+    }
+
+    // 4. Analyze Allergies
+    for (var allergy in userAllergies) {
+      if (ingredientsStr.contains(allergy.toLowerCase())) {
+        warnings.add("ALLERGY: Contains $allergy");
+        continue;
+      }
+      if (combinedRules.containsKey(allergy)) {
+        for (var forbidden in combinedRules[allergy]!.forbiddenKeywords) {
+          if (ingredientsStr.contains(forbidden.toLowerCase())) {
+            warnings.add("ALLERGY: Contains $forbidden");
+            break;
+          }
+        }
+      }
+    }
+
+    return {
+      'isSafe': warnings.isEmpty,
+      'warnings': warnings,
+      'recipeData': recipeData,
+    };
   }
 }
