@@ -74,7 +74,7 @@ class _DietRxSplashScreenState extends State<DietRxSplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1B4D3E),
+      backgroundColor: const Color(0xFF557B3E),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
